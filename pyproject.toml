@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "arduino-audio-reactor"
+version = "0.1.0"
+description = ""
+authors = ["Trevor O'Leary <git@trevoroleary.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
