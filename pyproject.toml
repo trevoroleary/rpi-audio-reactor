@@ -6,7 +6,7 @@ authors = ["Trevor O'Leary <git@trevoroleary.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.7"
 numpy = "^1.25.2"
 wave = "^0.0.2"
 pyhap = "^0.1.1"

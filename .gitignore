@@ -1,3 +1,7 @@
 .DS_store
 /poetry.lock
 .idea/
+.venv/
+Python-3.9.18/
+Python-3.9.18.tgz
+*.log
