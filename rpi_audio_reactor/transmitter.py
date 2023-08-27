@@ -9,6 +9,43 @@ import pigpio
 from nrf24 import *
 
 
+class LEDPacket:
+    def __init__(self, starting_number: int, brightness: int, led_rgbs: list):
+        self.starting_number = starting_number
+        self.brightness = brightness
+        self.led_rgbs = led_rgbs
+    
+    def get_payload(self) -> bytes:
+        string_format = "@" + "".join(["B" for _ in range(32)])
+        
+        led_rgb_list = list()
+        print(f"Starting Number: {self.starting_number}")
+        print(f"Brightness: {self.brightness}")
+        for i, (r, g, b) in enumerate(self.led_rgbs):
+            led_rgb_list += [r, g, b]
+            print(f"LED #{i}   |   r: {r}, g: {g}, b: {b}")
+        args = [self.starting_number, self.brightness] + led_rgb_list
+        payload = struct.pack(string_format, *args)
+        return payload
+
+def send_packet(payload):
+    # Send the payload to the address specified above.
+    radio.reset_packages_lost()
+    radio.send(payload)
+    try:
+        radio.wait_until_sent()
+        
+    except TimeoutError:
+        print("Timeout waiting for transmission to complete.")
+        time.sleep(10)
+        return
+
+    if radio.get_packages_lost() == 0:
+        print(f"Success: lost={radio.get_packages_lost()}, retries={radio.get_retries()}")
+    else:
+        print(f"Error: lost={radio.get_packages_lost()}, retries={radio.get_retries()}")
+
+
 #
 # A simple NRF24L receiver that connects to a PIGPIO instance on a hostname and port, default "localhost" and 8888, and
 # starts receiving data on the address specified.  Use the companion program "simple-sender.py" to send data to it from
@@ -52,35 +89,11 @@ if __name__ == "__main__":
             # Emulate that we read temperature and humidity from a sensor, for example
             # a DHT22 sensor.  Add a little random variation so we can see that values
             # sent/received fluctuate a bit.
-            starting_number = 1
-            r = int(normalvariate(20, 2))
-            g = int(255)
-            b = 21
-            print(f'Pixel Color: r={r}, g={g}, b={b}')
+            packet = LEDPacket(1, 100, [(i, i+1, i+2) for i in range(10)])
+            payload = packet.get_payload()
+            send_packet(payload)
 
-            # Pack temperature and humidity into a byte buffer (payload) using a protocol 
-            # signature of 0x01 so that the receiver knows that the bytes we are sending 
-            # are a temperature and a humidity (see "simple-receiver.py").
-            payload = struct.pack("@BBBB", starting_number, r, g, b)
-
-            # Send the payload to the address specified above.
-            radio.reset_packages_lost()
-            radio.send(payload)
-            try:
-                radio.wait_until_sent()
-                
-            except TimeoutError:
-                print("Timeout waiting for transmission to complete.")
-                time.sleep(10)
-                continue
-            
-            if radio.get_packages_lost() == 0:
-                print(f"Success: lost={radio.get_packages_lost()}, retries={radio.get_retries()}")
-            else:
-                print(f"Error: lost={radio.get_packages_lost()}, retries={radio.get_retries()}")
-
-            # Wait 10 seconds before sending the next reading.
-            time.sleep(1)
+            time.sleep(5)
 
     except:
         traceback.print_exc()
