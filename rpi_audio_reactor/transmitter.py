@@ -19,11 +19,11 @@ class LEDPacket:
         string_format = "@" + "".join(["B" for _ in range(32)])
         
         led_rgb_list = list()
-        print(f"Starting Number: {self.starting_number}")
-        print(f"Brightness: {self.brightness}")
+        # print(f"Starting Number: {self.starting_number}")
+        # print(f"Brightness: {self.brightness}")
         for i, (r, g, b) in enumerate(self.led_rgbs):
             led_rgb_list += [r, g, b]
-            print(f"LED #{i}   |   r: {r}, g: {g}, b: {b}")
+            # print(f"LED #{i}   |   r: {r}, g: {g}, b: {b}")
         args = [self.starting_number, self.brightness] + led_rgb_list
         payload = struct.pack(string_format, *args)
         return payload
@@ -45,6 +45,13 @@ def send_packet(payload):
     else:
         print(f"Error: lost={radio.get_packages_lost()}, retries={radio.get_retries()}")
 
+def rand_int(base_color: int):
+    value = int(normalvariate(base_color, 50))
+    if value < 0:
+        value = 0
+    if value > 255:
+        value = 255
+    return value
 
 #
 # A simple NRF24L receiver that connects to a PIGPIO instance on a hostname and port, default "localhost" and 8888, and
@@ -89,11 +96,14 @@ if __name__ == "__main__":
             # Emulate that we read temperature and humidity from a sensor, for example
             # a DHT22 sensor.  Add a little random variation so we can see that values
             # sent/received fluctuate a bit.
-            packet = LEDPacket(1, 100, [(i, i+1, i+2) for i in range(10)])
-            payload = packet.get_payload()
-            send_packet(payload)
-
-            time.sleep(5)
+            for color in ([255, 0, 0], [0, 255, 0], [0, 0, 255]):
+                    
+                for i in range(8):
+                    packet = LEDPacket(i*10, 100, [(rand_int(100), rand_int(100), rand_int(100)) for i in range(10)])
+                    # packet = LEDPacket(i*10, 100, [color for i in range(10)])
+                    payload = packet.get_payload()
+                    send_packet(payload)
+                time.sleep(abs(normalvariate(0, 0.5)))
 
     except:
         traceback.print_exc()
